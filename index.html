@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fractions Continues — Grand Oral Maths</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f4ef;
+    --surface: #fff;
+    --border: #e2ddd6;
+    --accent: #b45309;
+    --accent2: #0f766e;
+    --text: #1c1917;
+    --muted: #78716c;
+    --gold: #d97706;
+    --light: #fdf8f0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Mono', monospace; min-height: 100vh; }
+
+  header {
+    padding: 36px 40px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: baseline; gap: 20px; flex-wrap: wrap;
+    background: var(--surface);
+  }
+  header h1 { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 400; color: var(--text); }
+  header .tag { font-size: 11px; color: var(--accent2); letter-spacing: .12em; text-transform: uppercase; border: 1px solid var(--accent2); padding: 3px 10px; border-radius: 20px; }
+
+  .page { max-width: 960px; margin: 0 auto; padding: 40px 24px; display: flex; flex-direction: column; gap: 40px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 28px;
+  }
+  .card-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 400; margin-bottom: 8px; }
+  .card-sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+
+  .number-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .num-card {
+    border: 2px solid var(--border); border-radius: 8px; padding: 14px;
+    cursor: pointer; transition: all .2s; text-align: center;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .num-card:hover { border-color: var(--gold); }
+  .num-card.active { border-color: var(--accent); background: #fef3c7; }
+  .num-card .num-name { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
+  .num-card .num-val { font-size: 20px; font-weight: 500; color: var(--accent); }
+  .num-card .num-cf { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  .cf-display {
+    background: var(--light); border: 1px solid var(--border); border-radius: 8px;
+    padding: 20px; margin-bottom: 20px; text-align: center;
+  }
+  .cf-main { font-size: 15px; color: var(--text); margin-bottom: 8px; letter-spacing: .02em; }
+  .cf-expanded { font-size: 13px; color: var(--muted); }
+
+  .convergents-title { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 12px; }
+  .convergents { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .conv-item {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 14px; font-size: 13px;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+  }
+  .conv-frac { color: var(--text); }
+  .conv-val { font-size: 11px; color: var(--muted); }
+  .conv-err { font-size: 10px; color: var(--accent2); }
+
+  .viz-area {
+    height: 220px; position: relative; margin-top: 8px;
+  }
+  #conv-canvas { display: block; width: 100%; height: 100%; }
+
+  .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 640px) { .comparison { grid-template-columns: 1fr; } }
+
+  .compare-card {
+    border: 1px solid var(--border); border-radius: 8px; padding: 16px;
+  }
+  .compare-card.gold { border-color: var(--gold); background: #fffbeb; }
+  .compare-card.pi { border-color: #7c3aed; background: #faf5ff; }
+  .compare-label { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 8px; }
+  .compare-card.gold .compare-label { color: var(--gold); }
+  .compare-card.pi .compare-label { color: #7c3aed; }
+  .compare-row { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; border-bottom: 1px solid var(--border); }
+  .compare-row:last-child { border-bottom: none; }
+  .compare-frac { color: var(--text); }
+  .compare-err { color: var(--muted); }
+
+  .insight {
+    background: #f0fdf4; border: 1px solid #86efac;
+    border-radius: 8px; padding: 16px; font-size: 13px; color: #14532d; line-height: 1.7;
+    margin-top: 16px;
+  }
+  .insight strong { color: #166534; }
+
+  .formula-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  .formula-box {
+    flex: 1; min-width: 200px;
+    background: var(--light); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px; text-align: center;
+  }
+  .formula-box .f-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .08em; }
+  .formula-box .f-val { font-size: 14px; color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Fractions Continues</h1>
+  <span class="tag">Grand Oral — Maths</span>
+</header>
+
+<div class="page">
+
+  <div class="card">
+    <div class="card-title">Choisissez un nombre célèbre</div>
+    <div class="card-sub">Cliquez pour voir sa fraction continue et à quelle vitesse elle approche sa valeur réelle.</div>
+    <div class="number-grid">
+      <div class="num-card active" onclick="selectNumber('phi',this)">
+        <div class="num-name">Nombre d'or</div>
+        <div class="num-val">φ</div>
+        <div class="num-cf">[1; 1, 1, 1, ...]</div>
+      </div>
+      <div class="num-card" onclick="selectNumber('pi',this)">
+        <div class="num-name">Pi</div>
+        <div class="num-val">π</div>
+        <div class="num-cf">[3; 7, 15, 1, 292, ...]</div>
+      </div>
+      <div class="num-card" onclick="selectNumber('e',this)">
+        <div class="num-name">Nombre d'Euler</div>
+        <div class="num-val">e</div>
+        <div class="num-cf">[2; 1, 2, 1, 1, 4, 1, ...]</div>
+      </div>
+      <div class="num-card" onclick="selectNumber('sqrt2',this)">
+        <div class="num-name">Racine de 2</div>
+        <div class="num-val">√2</div>
+        <div class="num-cf">[1; 2, 2, 2, ...]</div>
+      </div>
+    </div>
+
+    <div class="cf-display">
+      <div class="cf-main" id="cf-main">φ = 1 + 1/(1 + 1/(1 + 1/(1 + ...)))</div>
+      <div class="cf-expanded" id="cf-notation">[1; 1, 1, 1, 1, 1, ...]</div>
+    </div>
+
+    <div class="convergents-title">Fractions convergentes (approximations successives)</div>
+    <div class="convergents" id="convergents"></div>
+
+    <div class="viz-area">
+      <canvas id="conv-canvas"></canvas>
+    </div>
+
+    <div class="insight" id="insight">
+      <strong>Pourquoi φ est "le plus irrationnel" ?</strong> Ses coefficients sont tous égaux à 1 — les plus petits possibles. Cela signifie que chaque nouvelle fraction convergente n'améliore que très peu l'approximation. φ est donc le nombre le plus difficile à approcher par des fractions simples.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">φ vs π : vitesse de convergence</div>
+    <div class="card-sub">Plus l'erreur décroît vite, meilleure est l'approximation. π converge beaucoup plus vite que φ grâce à ses grands coefficients (7, 15, 292...).</div>
+    <div class="comparison">
+      <div class="compare-card gold">
+        <div class="compare-label">φ ≈ 1.6180339...</div>
+        <div class="compare-row"><span class="compare-frac">1/1</span><span class="compare-err">erreur : 0.618</span></div>
+        <div class="compare-row"><span class="compare-frac">2/1</span><span class="compare-err">erreur : 0.382</span></div>
+        <div class="compare-row"><span class="compare-frac">3/2</span><span class="compare-err">erreur : 0.118</span></div>
+        <div class="compare-row"><span class="compare-frac">5/3</span><span class="compare-err">erreur : 0.049</span></div>
+        <div class="compare-row"><span class="compare-frac">8/5</span><span class="compare-err">erreur : 0.018</span></div>
+        <div class="compare-row"><span class="compare-frac">13/8</span><span class="compare-err">erreur : 0.007</span></div>
+        <div class="compare-row"><span class="compare-frac">21/13</span><span class="compare-err">erreur : 0.003</span></div>
+      </div>
+      <div class="compare-card pi">
+        <div class="compare-label">π ≈ 3.1415926...</div>
+        <div class="compare-row"><span class="compare-frac">3/1</span><span class="compare-err">erreur : 0.142</span></div>
+        <div class="compare-row"><span class="compare-frac">22/7</span><span class="compare-err">erreur : 0.0013</span></div>
+        <div class="compare-row"><span class="compare-frac">333/106</span><span class="compare-err">erreur : 0.000083</span></div>
+        <div class="compare-row"><span class="compare-frac">355/113</span><span class="compare-err">erreur : 0.000000266</span></div>
+        <div class="compare-row"><span class="compare-frac" style="font-size:10px">103993/33102</span><span class="compare-err">erreur : 5.8×10⁻¹⁰</span></div>
+      </div>
+    </div>
+    <div class="insight">
+      <strong>La clé :</strong> quand un coefficient est grand (comme 292 pour π), la fraction suivante fait un bond énorme dans la précision. φ n'a que des 1 — chaque étape n'améliore que légèrement. C'est exactement pour ça que l'angle d'or (360° × (1-1/φ)) ne "tombe jamais juste" dans une répétition régulière.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Formule générale</div>
+    <div class="formula-row">
+      <div class="formula-box">
+        <div class="f-label">Notation compacte</div>
+        <div class="f-val">x = [a₀ ; a₁, a₂, a₃, ...]</div>
+      </div>
+      <div class="formula-box">
+        <div class="f-label">Forme développée</div>
+        <div class="f-val">x = a₀ + 1/(a₁ + 1/(a₂ + ...))</div>
+      </div>
+      <div class="formula-box">
+        <div class="f-label">Pour φ spécifiquement</div>
+        <div class="f-val">φ = [1 ; 1, 1, 1, 1, ...]</div>
+      </div>
+    </div>
+    <div class="card-sub">
+      Les aᵢ sont appelés les quotients partiels. Tous les nombres rationnels ont une fraction continue finie. Tous les irrationnels ont une fraction continue infinie. Les irrationnels quadratiques (comme φ et √2) ont des fractions continues périodiques.
+    </div>
+  </div>
+
+</div>
+
+<script>
+const numbers = {
+  phi: {
+    value: (1 + Math.sqrt(5)) / 2,
+    coeffs: [1,1,1,1,1,1,1,1,1,1],
+    main: 'φ = 1 + 1/(1 + 1/(1 + 1/(1 + ...)))',
+    notation: '[1; 1, 1, 1, 1, 1, ...]',
+    insight: '<strong>Pourquoi φ est "le plus irrationnel" ?</strong> Ses coefficients sont tous égaux à 1 — les plus petits possibles. Cela signifie que chaque nouvelle fraction convergente n\'améliore que très peu l\'approximation. φ est donc le nombre le plus difficile à approcher par des fractions simples.'
+  },
+  pi: {
+    value: Math.PI,
+    coeffs: [3,7,15,1,292,1,1,1,2,1],
+    main: 'π = 3 + 1/(7 + 1/(15 + 1/(1 + 1/(292 + ...))))',
+    notation: '[3; 7, 15, 1, 292, 1, 1, 1, 2, ...]',
+    insight: '<strong>Le coefficient 292 de π</strong> explique pourquoi 355/113 est une approximation si précise (erreur < 3×10⁻⁷). Un grand coefficient = un saut énorme dans la précision à cette étape.'
+  },
+  e: {
+    value: Math.E,
+    coeffs: [2,1,2,1,1,4,1,1,6,1],
+    main: 'e = 2 + 1/(1 + 1/(2 + 1/(1 + 1/(1 + 1/(4 + ...)))))',
+    notation: '[2; 1, 2, 1, 1, 4, 1, 1, 6, 1, ...]',
+    insight: '<strong>e a un motif régulier :</strong> [2; 1, 2, 1, 1, 4, 1, 1, 6, 1, 1, 8...]. Les coefficients pairs forment la suite 2, 4, 6, 8... — une structure cachée dans ce nombre fondamental.'
+  },
+  sqrt2: {
+    value: Math.sqrt(2),
+    coeffs: [1,2,2,2,2,2,2,2,2,2],
+    main: '√2 = 1 + 1/(2 + 1/(2 + 1/(2 + ...)))',
+    notation: '[1; 2, 2, 2, 2, ...]',
+    insight: '<strong>√2 = [1; 2, 2, 2, ...]</strong> est aussi périodique, comme φ. Les deux sont des irrationnels quadratiques (solutions d\'équations du 2e degré). Cette périodicité est une propriété profonde démontrée par Lagrange en 1770.'
+  }
+};
+
+let currentNum = 'phi';
+
+function getConvergents(coeffs, value) {
+  let convs = [];
+  let h_prev = 1, h_curr = coeffs[0];
+  let k_prev = 0, k_curr = 1;
+  convs.push({ n: h_curr, d: k_curr, val: h_curr/k_curr, err: Math.abs(h_curr/k_curr - value) });
+  for (let i = 1; i < coeffs.length; i++) {
+    const h_next = coeffs[i] * h_curr + h_prev;
+    const k_next = coeffs[i] * k_curr + k_prev;
+    convs.push({ n: h_next, d: k_next, val: h_next/k_next, err: Math.abs(h_next/k_next - value) });
+    h_prev = h_curr; h_curr = h_next;
+    k_prev = k_curr; k_curr = k_next;
+  }
+  return convs;
+}
+
+function selectNumber(name, btn) {
+  currentNum = name;
+  document.querySelectorAll('.num-card').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const d = numbers[name];
+  document.getElementById('cf-main').textContent = d.main;
+  document.getElementById('cf-notation').textContent = d.notation;
+  document.getElementById('insight').innerHTML = d.insight;
+
+  const convs = getConvergents(d.coeffs, d.value);
+  const container = document.getElementById('convergents');
+  container.innerHTML = '';
+  convs.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'conv-item';
+    div.innerHTML = `<span class="conv-frac">${c.n}/${c.d}</span><span class="conv-val">${c.val.toFixed(6)}</span><span class="conv-err">err: ${c.err.toFixed(5)}</span>`;
+    container.appendChild(div);
+  });
+
+  drawConvergenceChart(convs, d.value);
+}
+
+function drawConvergenceChart(convs, target) {
+  const canvas = document.getElementById('conv-canvas');
+  const W = canvas.parentElement.clientWidth;
+  const H = 200;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  ctx.fillStyle = '#f7f4ef';
+  ctx.fillRect(0, 0, W, H);
+
+  const errors = convs.map(c => c.err).filter(e => e > 0);
+  const maxErr = Math.max(...errors);
+  const minErr = Math.min(...errors);
+
+  const pad = { l: 50, r: 20, t: 20, b: 40 };
+  const gw = W - pad.l - pad.r;
+  const gh = H - pad.t - pad.b;
+
+  ctx.strokeStyle = '#e2ddd6';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + (i / 4) * gh;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+  }
+
+  const pts = convs.filter(c => c.err > 0);
+  ctx.strokeStyle = '#b45309';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  pts.forEach((c, i) => {
+    const x = pad.l + (i / (pts.length - 1)) * gw;
+    const logErr = Math.log10(c.err);
+    const logMax = Math.log10(maxErr);
+    const logMin = Math.log10(minErr) - 0.5;
+    const y = pad.t + ((logErr - logMax) / (logMin - logMax)) * gh;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  pts.forEach((c, i) => {
+    const x = pad.l + (i / (pts.length - 1)) * gw;
+    const logErr = Math.log10(c.err);
+    const logMax = Math.log10(maxErr);
+    const logMin = Math.log10(minErr) - 0.5;
+    const y = pad.t + ((logErr - logMax) / (logMin - logMax)) * gh;
+    ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2);
+    ctx.fillStyle = '#b45309'; ctx.fill();
+    ctx.fillStyle = '#78716c';
+    ctx.font = '10px IBM Plex Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${c.n}/${c.d}`, x, H - 10);
+  });
+
+  ctx.fillStyle = '#78716c';
+  ctx.font = '10px IBM Plex Mono, monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText('erreur', pad.l - 4, pad.t + 10);
+  ctx.fillText('(log)', pad.l - 4, pad.t + 22);
+}
+
+selectNumber('phi', document.querySelector('.num-card.active'));
+window.addEventListener('resize', () => {
+  const convs = getConvergents(numbers[currentNum].coeffs, numbers[currentNum].value);
+  drawConvergenceChart(convs, numbers[currentNum].value);
+});
+</script>
+</body>
+</html>
